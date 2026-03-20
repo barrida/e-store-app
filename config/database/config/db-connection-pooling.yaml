@@ -1,0 +1,106 @@
+# =============================================================================
+# E-Store Application — Database Connection Pooling Configuration (HikariCP)
+# =============================================================================
+# This YAML shows recommended HikariCP settings for each microservice.
+# Adjust pool sizes according to your environment's available connections and
+# expected concurrency. A common formula is:
+#
+#   max_pool_size = (number_of_cpu_cores * 2) + effective_spindle_count
+#
+# For PostgreSQL the recommended default ceiling is ~100 total connections
+# across all services combined. Use PgBouncer for higher connection counts.
+# =============================================================================
+
+spring:
+  # ---------------------------------------------------------------------------
+  # Shared HikariCP defaults (can be overridden per datasource)
+  # ---------------------------------------------------------------------------
+  datasource:
+    hikari:
+      # Maximum number of connections in the pool
+      maximum-pool-size: 10
+      # Minimum idle connections maintained in the pool
+      minimum-idle: 5
+      # Maximum time (ms) to wait for a connection from the pool
+      connection-timeout: 30000
+      # Maximum time (ms) a connection is allowed to sit idle before being retired
+      idle-timeout: 600000
+      # Maximum lifetime (ms) of a connection in the pool (< PostgreSQL's tcp_keepalives_idle)
+      max-lifetime: 1800000
+      # Frequency (ms) of connection liveness checks
+      keepalive-time: 60000
+      # Query used to validate connections
+      connection-test-query: SELECT 1
+      # Enable auto-commit (set false for transactional services that manage TX manually)
+      auto-commit: true
+
+# =============================================================================
+# Per-service overrides
+# =============================================================================
+
+product-catalog:
+  datasource:
+    hikari:
+      pool-name: ProductCatalogPool
+      maximum-pool-size: 15        # Higher read traffic expected
+      minimum-idle: 5
+      connection-timeout: 20000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+user-management:
+  datasource:
+    hikari:
+      pool-name: UserManagementPool
+      maximum-pool-size: 10
+      minimum-idle: 3
+      connection-timeout: 20000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+order-management:
+  datasource:
+    hikari:
+      pool-name: OrderManagementPool
+      maximum-pool-size: 10
+      minimum-idle: 3
+      connection-timeout: 30000    # Slightly higher for write-heavy order creation
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+payment-processing:
+  datasource:
+    hikari:
+      pool-name: PaymentProcessingPool
+      maximum-pool-size: 5         # Lower because payment calls are serialized externally
+      minimum-idle: 2
+      connection-timeout: 30000
+      idle-timeout: 300000
+      max-lifetime: 900000         # Shorter lifetime for security-sensitive service
+
+notification-service:
+  datasource:
+    hikari:
+      pool-name: NotificationServicePool
+      maximum-pool-size: 8         # Async worker threads write notifications
+      minimum-idle: 2
+      connection-timeout: 20000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+# =============================================================================
+# PgBouncer settings (recommended for production high-traffic deployments)
+# Use transaction-mode pooling with PgBouncer sitting in front of PostgreSQL.
+# Update JDBC URLs to point to PgBouncer port (typically 6432) instead of 5432.
+# =============================================================================
+#
+# pgbouncer:
+#   host: pgbouncer-host
+#   port: 6432
+#   pool-mode: transaction          # transaction | session | statement
+#   max-client-conn: 1000
+#   default-pool-size: 25
+#   min-pool-size: 5
+#   reserve-pool-size: 5
+#   server-idle-timeout: 600
+#   server-lifetime: 3600
