@@ -1,14 +1,13 @@
 package com.estore.notification.dto;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 
 public record NotificationTemplateRequest(
 
         @NotBlank(message = "Template name is required")
         String name,
 
-        @NotNull(message = "Channel is required")
+        @NotBlank(message = "Channel is required")
         String channel,
 
         String subject,

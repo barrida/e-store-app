@@ -8,7 +8,7 @@ public record UserPreferenceRequest(
         @NotNull(message = "User ID is required")
         Long userId,
 
-        @NotNull(message = "Channel is required")
+        @NotBlank(message = "Channel is required")
         String channel,
 
         @NotBlank(message = "Template name is required")
